@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { authService, type User } from '../services'
+import { authService, userService, type User, type Permission } from '../services'
 
 interface AuthContextType {
   user: User | null
   token: string | null
   login: (token: string, user: User) => void
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
+  hasPermission: (permission: Permission) => boolean
   isAuthenticated: boolean
   isLoading: boolean
 }
@@ -21,11 +23,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = authService.getToken()
     const storedUser = localStorage.getItem('user')
 
-    if (storedToken && storedUser) {
+    if (storedToken) {
       setToken(storedToken)
+    }
+
+    if (storedUser) {
       setUser(JSON.parse(storedUser))
     }
-    setIsLoading(false)
+
+    const loadUser = async () => {
+      if (!storedToken) {
+        setIsLoading(false)
+        return
+      }
+      try {
+        const me = await userService.getMe()
+        localStorage.setItem('user', JSON.stringify(me))
+        setUser(me)
+      } catch (error) {
+        console.error('Failed to refresh user session:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void loadUser()
   }, [])
 
   const login = (newToken: string, newUser: User) => {
@@ -37,10 +59,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     authService.logout()
+    authService.removeToken()
     localStorage.removeItem("user")
     setToken(null)
     setUser(null)
   }
+
+  const refreshUser = async () => {
+    const me = await userService.getMe()
+    localStorage.setItem('user', JSON.stringify(me))
+    setUser(me)
+  }
+
+  const hasPermission = (permission: Permission) =>
+    user?.role?.permissions?.includes(permission) ?? false
 
   return (
     <AuthContext.Provider
@@ -49,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         login,
         logout,
+        refreshUser,
+        hasPermission,
         isAuthenticated: !!token,
         isLoading,
       }}

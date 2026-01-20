@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
-import { contactService, type Contact } from '../services'
+import { contactService, type Contact, Permissions } from '../services'
+import { useAuth } from '../context/AuthContext'
+import { PermissionGate } from '../components'
 
 export function ContactsPage() {
+  const { hasPermission } = useAuth()
+  const canRead = hasPermission(Permissions.ContactsRead)
+  const canWrite = hasPermission(Permissions.ContactsWrite)
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -10,8 +15,12 @@ export function ContactsPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    if (!canRead) {
+      setLoading(false)
+      return
+    }
     loadContacts()
-  }, [])
+  }, [canRead])
 
   async function loadContacts() {
     try {
@@ -81,109 +90,117 @@ export function ContactsPage() {
           <h1 className="text-2xl font-bold text-slate-900">Contacts</h1>
           <p className="text-slate-500 mt-1">Manage your contacts</p>
         </div>
-        <button
-          onClick={openCreateForm}
-          className="px-4 py-2 rounded-lg bg-slate-900 text-white font-medium hover:bg-slate-700 transition-colors"
-        >
-          Add Contact
-        </button>
-      </div>
-
-      {showForm && (
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">
-            {editingContact ? 'Edit Contact' : 'New Contact'}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-500 disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        {contacts.length === 0 ? (
-          <div className="p-6 text-center text-slate-500">
-            No contacts yet. Add your first contact!
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Phone</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {contacts.map((contact) => (
-                <tr key={contact.id} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 text-slate-900 font-medium">{contact.name}</td>
-                  <td className="px-6 py-4 text-slate-600">{contact.email || '-'}</td>
-                  <td className="px-6 py-4 text-slate-600">{contact.phone || '-'}</td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <button
-                      onClick={() => openEditForm(contact)}
-                      className="text-indigo-600 hover:text-indigo-500 font-medium text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(contact.id)}
-                      className="text-red-600 hover:text-red-500 font-medium text-sm"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {canWrite && (
+          <button
+            onClick={openCreateForm}
+            className="px-4 py-2 rounded-lg bg-slate-900 text-white font-medium hover:bg-slate-700 transition-colors"
+          >
+            Add Contact
+          </button>
         )}
       </div>
+
+      <PermissionGate permission={Permissions.ContactsRead}>
+        {showForm && canWrite && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              {editingContact ? 'Edit Contact' : 'New Contact'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          {contacts.length === 0 ? (
+            <div className="p-6 text-center text-slate-500">
+              No contacts yet. Add your first contact!
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Phone</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {contacts.map((contact) => (
+                  <tr key={contact.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 text-slate-900 font-medium">{contact.name}</td>
+                    <td className="px-6 py-4 text-slate-600">{contact.email || '-'}</td>
+                    <td className="px-6 py-4 text-slate-600">{contact.phone || '-'}</td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      {canWrite && (
+                        <>
+                          <button
+                            onClick={() => openEditForm(contact)}
+                            className="text-indigo-600 hover:text-indigo-500 font-medium text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(contact.id)}
+                            className="text-red-600 hover:text-red-500 font-medium text-sm"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </PermissionGate>
     </div>
   )
 }

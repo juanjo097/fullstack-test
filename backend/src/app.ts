@@ -2,7 +2,7 @@ import express, { type Express } from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import type { DataSource } from 'typeorm'
-import { createAuthMiddleware } from '@shared/http'
+import { createAuthMiddleware, createPermissionMiddleware } from '@shared/http'
 import { errorHandler } from '@shared/errors'
 import {
   UserUseCases,
@@ -11,6 +11,20 @@ import {
   UserController,
   createUserRoutes,
 } from '@modules/users'
+import {
+  RoleUseCases,
+  RoleEntity,
+  PostgresRoleRepository,
+  RoleController,
+  createRoleRoutes,
+} from '@modules/roles'
+import {
+  AuditLogUseCases,
+  AuditLogEntity,
+  PostgresAuditLogRepository,
+  AuditLogController,
+  createAuditLogRoutes,
+} from '@modules/audit'
 import {
   AuthUseCases,
   PostgresAuthRepository,
@@ -75,12 +89,27 @@ export function createApp(dataSource: DataSource): Express {
   const organizationUseCases = new OrganizationUseCases(organizationRepository)
   const organizationController = new OrganizationController(organizationUseCases)
 
+  // Roles Module - Dependency Injection
+  const roleRepository = new PostgresRoleRepository(
+    dataSource.getRepository(RoleEntity)
+  )
+  const roleUseCases = new RoleUseCases(roleRepository)
+
+  // Audit Module - Dependency Injection
+  const auditLogRepository = new PostgresAuditLogRepository(
+    dataSource.getRepository(AuditLogEntity)
+  )
+  const auditLogUseCases = new AuditLogUseCases(auditLogRepository)
+  const auditLogController = new AuditLogController(auditLogUseCases)
+
   // Users Module - Dependency Injection
   const userRepository = new PostgresUserRepository(
     dataSource.getRepository(UserEntity)
   )
   const userUseCases = new UserUseCases(userRepository)
-  const userController = new UserController(userUseCases)
+  const userController = new UserController(userUseCases, auditLogUseCases, roleUseCases)
+
+  const roleController = new RoleController(roleUseCases, auditLogUseCases)
 
   // Workflow Module - Dependency Injection
   const workflowRepository = new PostgresWorkflowRepository(
@@ -108,7 +137,8 @@ export function createApp(dataSource: DataSource): Express {
     organizationRepository,
     workflowRepository,
     sessionRepository,
-    refreshTokenService
+    refreshTokenService,
+    roleUseCases
   )
   const authController = new AuthController(authUseCases)
 
@@ -127,15 +157,24 @@ export function createApp(dataSource: DataSource): Express {
   const dealUseCases = new DealUseCases(dealRepository)
   const dealController = new DealController(dealUseCases)
 
+  // Permission Middleware
+  const requirePermission = createPermissionMiddleware(
+    userRepository,
+    roleUseCases,
+    auditLogRepository
+  )
+
   // Routes (public)
   app.use('/api/auth', createAuthRoutes(authController))
-  app.use('/api/users', createUserRoutes(userController))
+  app.use('/api/users', createUserRoutes(userController, authMiddleware, requirePermission))
 
   // Routes (protected - require auth)
-  app.use('/api/organizations', createOrganizationRoutes(organizationController, authMiddleware))
-  app.use('/api/contacts', createContactRoutes(contactController, authMiddleware))
-  app.use('/api/workflows', createWorkflowRoutes(workflowController, authMiddleware))
-  app.use('/api/deals', createDealRoutes(dealController, authMiddleware))
+  app.use('/api/organizations', createOrganizationRoutes(organizationController, authMiddleware, requirePermission))
+  app.use('/api/contacts', createContactRoutes(contactController, authMiddleware, requirePermission))
+  app.use('/api/workflows', createWorkflowRoutes(workflowController, authMiddleware, requirePermission))
+  app.use('/api/deals', createDealRoutes(dealController, authMiddleware, requirePermission))
+  app.use('/api/roles', createRoleRoutes(roleController, authMiddleware, requirePermission))
+  app.use('/api/audit-logs', createAuditLogRoutes(auditLogController, authMiddleware, requirePermission))
 
   app.use(errorHandler)
 

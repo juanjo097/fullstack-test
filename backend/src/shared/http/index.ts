@@ -1,4 +1,5 @@
 export * from './AuthenticatedRequest'
 export * from './authMiddleware'
+export * from './permissionMiddleware'
 export * from './asyncHandler'
 export * from './responseHelper'

@@ -6,11 +6,11 @@ export class JwtTokenGenerator implements TokenGenerator {
 
   constructor(private readonly secret: string) {}
 
-  generate(userId: string, organizationId: string): AuthToken {
+  generate(userId: string, organizationId: string, roleId: string | null): AuthToken {
     const expiresAt = new Date(Date.now() + this.expiresInMs)
 
     const accessToken = jwt.sign(
-      { userId, organizationId } satisfies TokenPayload,
+      { userId, organizationId, roleId } satisfies TokenPayload,
       this.secret,
       { expiresIn: '24h' }
     )

@@ -10,6 +10,7 @@ import type {
 } from "../domain";
 import type { OrganizationRepository } from "@modules/organization/domain";
 import type { WorkflowRepository } from "@modules/workflow/domain";
+import type { RoleUseCases } from "@modules/roles/application";
 import { invalidCredentials } from "@shared/errors" 
 import type { RefreshTokenService } from "../infrastructure";
 
@@ -22,6 +23,7 @@ export class AuthUseCases {
     private readonly workflowRepository: WorkflowRepository,
     private readonly sessionRepository: SessionRepository,
     private readonly refreshTokenService: RefreshTokenService,
+    private readonly roleUseCases: RoleUseCases,
   ) {}
 
   async register(data: RegisterDTO): Promise<AuthResponse> {
@@ -50,6 +52,8 @@ export class AuthUseCases {
     });
 
     const hashedPassword = await this.passwordHasher.hash(data.password);
+    const roles = await this.roleUseCases.ensureDefaultRoles(organization.id);
+    const adminRole = roles.find((role) => role.name === "Admin") ?? null;
 
     const user = await this.authRepository.create({
       name: data.name,
@@ -57,9 +61,10 @@ export class AuthUseCases {
       password: data.password,
       hashedPassword,
       organizationId: organization.id,
+      roleId: adminRole?.id ?? null,
     });
 
-    const token = this.tokenGenerator.generate(user.id, organization.id);
+    const token = this.tokenGenerator.generate(user.id, organization.id, user.roleId ?? null);
 
     const refresh = this.refreshTokenService.generate();
     await this.sessionRepository.create({
@@ -74,6 +79,8 @@ export class AuthUseCases {
         name: user.name,
         email: user.email,
         organizationId: user.organizationId,
+        roleId: user.roleId ?? null,
+        role: user.role ?? null,
       },
       token,
       refreshToken: refresh.token,
@@ -101,7 +108,18 @@ export class AuthUseCases {
       throw new Error("User has no organization");
     }
 
-    const token = this.tokenGenerator.generate(user.id, user.organizationId);
+    let roleId = user.roleId
+    if (!roleId && user.organizationId) {
+      const roles = await this.roleUseCases.ensureDefaultRoles(user.organizationId);
+      const adminRole = roles.find((role) => role.name === "Admin") ?? null;
+      if (adminRole) {
+        const updated = await this.authRepository.updateRole(user.id, adminRole.id);
+        roleId = updated?.roleId ?? adminRole.id;
+        user.role = updated?.role ?? user.role;
+      }
+    }
+
+    const token = this.tokenGenerator.generate(user.id, user.organizationId, roleId ?? null);
     const refresh = this.refreshTokenService.generate();
     await this.sessionRepository.create({
       userId: user.id,
@@ -120,6 +138,8 @@ export class AuthUseCases {
         name: user.name,
         email: user.email,
         organizationId: user.organizationId,
+        roleId: roleId ?? null,
+        role: user.role ?? null,
       },
       token,
       refreshToken: refresh.token,
@@ -153,7 +173,7 @@ export class AuthUseCases {
       refreshTokenHash: newRefresh.hash,
       expiresAt: newRefresh.expiresAt,
     });
-    const token = this.tokenGenerator.generate(user.id, user.organizationId);
+    const token = this.tokenGenerator.generate(user.id, user.organizationId, user.roleId ?? null);
 
     console.info("[AUTH] Session refreshed", {
       userId: user.id,

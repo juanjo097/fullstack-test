@@ -1,5 +1,8 @@
 export { api, ApiError, normalizeApiResponse, type ApiResponse } from './api'
 export { authService, type User, type AuthResponse, type LoginCredentials, type RegisterCredentials } from './auth.service'
+export { Permissions, type Permission, permissionLabels } from './permissions'
+export { roleService, type Role, type CreateRoleDTO, type UpdateRoleDTO } from './roles.service'
+export { userService } from './users.service'
 export { contactService, type Contact, type CreateContactDTO, type UpdateContactDTO } from './contact.service'
 export { dealService, type Deal, type DealStatus, type CreateDealDTO, type UpdateDealDTO } from './deal.service'
 export { workflowService, type Workflow, type Stage, type CreateWorkflowDTO, type CreateStageDTO } from './workflow.service'

@@ -24,3 +24,13 @@ export const createUserSchema = z.object({
   params: z.any(),
   query: z.any(),
 });
+
+export const updateUserRoleSchema = z.object({
+  body: z.object({
+    roleId: z.string().min(1),
+  }),
+  params: z.object({
+    id: z.string().min(1),
+  }),
+  query: z.any(),
+});

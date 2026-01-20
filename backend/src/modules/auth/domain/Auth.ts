@@ -21,6 +21,12 @@ export interface AuthUser {
   email: string;
   password: string;
   createdAt: Date;
+  roleId: string | null;
+  role?: {
+    id: string;
+    name: string;
+    permissions: string[];
+  } | null;
 }
 
 export interface AuthResponse {
@@ -29,6 +35,12 @@ export interface AuthResponse {
     name: string;
     email: string;
     organizationId: string | null;
+    roleId: string | null;
+    role?: {
+      id: string;
+      name: string;
+      permissions: string[];
+    } | null;
   };
   token: AuthToken;
   refreshToken: string;

@@ -27,6 +27,7 @@ export function createAuthMiddleware(tokenGenerator: TokenGenerator): RequestHan
     ;(req as any).user = {
       userId: payload.userId,
       organizationId: payload.organizationId,
+      roleId: payload.roleId,
     }
 
     next()

@@ -13,6 +13,9 @@ vi.mock('../services', () => ({
     setToken: vi.fn(),
     removeToken: vi.fn(),
   },
+  userService: {
+    getMe: vi.fn(),
+  },
   ApiError: class ApiError extends Error {
     constructor(public status: number, message: string) {
       super(message)
@@ -80,7 +83,14 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     vi.mocked(authService.login).mockResolvedValueOnce({
       token: { accessToken: 'test-token', expiresAt: '2025-01-01' },
-      user: { id: '1', name: 'Test', email: 'test@example.com', organizationId: 'org-1' },
+      user: {
+        id: '1',
+        name: 'Test',
+        email: 'test@example.com',
+        organizationId: 'org-1',
+        roleId: 'role-1',
+        role: { id: 'role-1', name: 'Admin', permissions: [] },
+      },
     })
 
     renderLoginPage()
@@ -101,7 +111,14 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     vi.mocked(authService.login).mockResolvedValueOnce({
       token: { accessToken: 'test-token', expiresAt: '2025-01-01' },
-      user: { id: '1', name: 'Test', email: 'test@example.com', organizationId: 'org-1' },
+      user: {
+        id: '1',
+        name: 'Test',
+        email: 'test@example.com',
+        organizationId: 'org-1',
+        roleId: 'role-1',
+        role: { id: 'role-1', name: 'Admin', permissions: [] },
+      },
     })
 
     renderLoginPage()
@@ -120,7 +137,14 @@ describe('LoginPage', () => {
     vi.mocked(authService.login).mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve({
         token: { accessToken: 'test-token', expiresAt: '2025-01-01' },
-        user: { id: '1', name: 'Test', email: 'test@example.com', organizationId: 'org-1' },
+        user: {
+          id: '1',
+          name: 'Test',
+          email: 'test@example.com',
+          organizationId: 'org-1',
+          roleId: 'role-1',
+          role: { id: 'role-1', name: 'Admin', permissions: [] },
+        },
       }), 100))
     )
 
