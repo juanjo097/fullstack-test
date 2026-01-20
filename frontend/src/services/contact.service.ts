@@ -1,4 +1,5 @@
-import { api, ApiResponse, normalizeApiResponse} from './api'
+import { api, ApiResponse, normalizeApiResponse, type PaginatedResponse } from './api'
+import { buildListQueryString, type ListQueryParams } from '../utils'
 
 export interface Contact {
   id: string
@@ -22,8 +23,10 @@ export interface UpdateContactDTO {
 }
 
 export const contactService = {
-  getAll: async () =>
-    normalizeApiResponse(await api.get<ApiResponse<Contact[]>>("/contacts")),
+  getAll: async (params?: ListQueryParams) =>
+    api.get<PaginatedResponse<Contact[]>>(
+      `/contacts${buildListQueryString(params)}`
+    ),
 
   getById: async (id: string) =>
     normalizeApiResponse(

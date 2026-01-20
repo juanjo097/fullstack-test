@@ -1,10 +1,12 @@
 import type { User, CreateUserDTO, UserRepository } from '../domain'
+import { applyListQuery, type ListQuery, type PaginatedResult } from '@shared/listing'
 
 export class InMemoryUserRepository implements UserRepository {
   private users: Map<string, User> = new Map()
 
-  async findAll(): Promise<User[]> {
-    return Array.from(this.users.values())
+  async findAll(query: ListQuery): Promise<PaginatedResult<User>> {
+    const users = Array.from(this.users.values())
+    return applyListQuery(users, query, ['id', 'name', 'email', 'createdAt'])
   }
 
   async findById(id: string): Promise<User | null> {

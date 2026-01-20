@@ -27,6 +27,18 @@ const contactFixture = {
   createdAt: '2024-01-01',
 }
 
+const buildResponse = (data: Array<typeof contactFixture>) => ({
+  data,
+  meta: {
+    page: 1,
+    limit: 10,
+    total: data.length,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  },
+})
+
 describe('ContactsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -34,7 +46,9 @@ describe('ContactsPage', () => {
 
   it('shows a success toast when creating a contact', async () => {
     const user = userEvent.setup()
-    vi.mocked(contactService.getAll).mockResolvedValueOnce([]).mockResolvedValueOnce([])
+    vi.mocked(contactService.getAll)
+      .mockResolvedValueOnce(buildResponse([]))
+      .mockResolvedValueOnce(buildResponse([]))
     vi.mocked(contactService.create).mockResolvedValueOnce(contactFixture)
 
     render(<ContactsPage />)
@@ -60,8 +74,8 @@ describe('ContactsPage', () => {
   it('shows a success toast when updating a contact', async () => {
     const user = userEvent.setup()
     vi.mocked(contactService.getAll)
-      .mockResolvedValueOnce([contactFixture])
-      .mockResolvedValueOnce([contactFixture])
+      .mockResolvedValueOnce(buildResponse([contactFixture]))
+      .mockResolvedValueOnce(buildResponse([contactFixture]))
     vi.mocked(contactService.update).mockResolvedValueOnce(contactFixture)
 
     render(<ContactsPage />)
@@ -87,8 +101,8 @@ describe('ContactsPage', () => {
     const user = userEvent.setup()
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     vi.mocked(contactService.getAll)
-      .mockResolvedValueOnce([contactFixture])
-      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(buildResponse([contactFixture]))
+      .mockResolvedValueOnce(buildResponse([]))
     vi.mocked(contactService.delete).mockResolvedValueOnce(undefined)
 
     render(<ContactsPage />)

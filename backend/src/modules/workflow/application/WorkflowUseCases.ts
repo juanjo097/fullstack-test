@@ -7,12 +7,16 @@ import type {
   UpdateStageDTO,
   WorkflowRepository,
 } from '../domain'
+import type { ListQuery, PaginatedResult } from '@shared/listing'
 
 export class WorkflowUseCases {
   constructor(private readonly workflowRepository: WorkflowRepository) {}
 
-  async getAllByOrganization(organizationId: string): Promise<Workflow[]> {
-    return this.workflowRepository.findAllByOrganization(organizationId)
+  async getAllByOrganization(
+    organizationId: string,
+    query: ListQuery
+  ): Promise<PaginatedResult<Workflow>> {
+    return this.workflowRepository.findAllByOrganization(organizationId, query)
   }
 
   async getWorkflowById(id: string): Promise<Workflow | null> {

@@ -19,14 +19,32 @@ describe('contactService', () => {
   describe('getAll', () => {
     it('should call api.get with correct endpoint', async () => {
       const mockContacts = [
-        { id: '1', name: 'Contact 1', organizationId: 'org-1', email: null, phone: null, createdAt: '2024-01-01' },
+        {
+          id: '1',
+          name: 'Contact 1',
+          organizationId: 'org-1',
+          email: null,
+          phone: null,
+          createdAt: '2024-01-01',
+        },
       ]
-      vi.mocked(api.get).mockResolvedValueOnce(mockContacts)
+      const mockResponse = {
+        data: mockContacts,
+        meta: {
+          page: 1,
+          limit: 20,
+          total: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      }
+      vi.mocked(api.get).mockResolvedValueOnce(mockResponse)
 
       const result = await contactService.getAll()
 
       expect(api.get).toHaveBeenCalledWith('/contacts')
-      expect(result).toEqual(mockContacts)
+      expect(result).toEqual(mockResponse)
     })
   })
 

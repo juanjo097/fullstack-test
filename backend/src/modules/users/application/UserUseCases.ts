@@ -1,10 +1,11 @@
 import type { User, CreateUserDTO, UserRepository } from '../domain'
+import type { ListQuery, PaginatedResult } from '@shared/listing'
 
 export class UserUseCases {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async getAllUsers(): Promise<User[]> {
-    return this.userRepository.findAll()
+  async getAllUsers(query: ListQuery): Promise<PaginatedResult<User>> {
+    return this.userRepository.findAll(query)
   }
 
   async getUserById(id: string): Promise<User | null> {

@@ -12,10 +12,13 @@ export function WorkflowsPage() {
 
   async function loadWorkflows() {
     try {
-      const data = await workflowService.getAll()
-      setWorkflows(data)
-      if (data.length > 0 && !selectedWorkflow) {
-        setSelectedWorkflow(data[0])
+      const response = await workflowService.getAll({
+        limit: 50,
+        sort: [{ field: "createdAt", direction: "desc" }],
+      })
+      setWorkflows(response.data)
+      if (response.data.length > 0 && !selectedWorkflow) {
+        setSelectedWorkflow(response.data[0])
       }
     } catch (error) {
       console.error('Failed to load workflows:', error)

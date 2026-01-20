@@ -1,14 +1,16 @@
 import type { Request, Response } from 'express'
-import { created, noContent, ok } from '@shared/http'
+import { created, noContent, ok, paginated } from '@shared/http'
 import { notFound } from '@shared/errors'
+import { parseListQuery } from '@shared/listing'
 import type { UserUseCases } from '../application'
 
 export class UserController {
   constructor(private readonly userUseCases: UserUseCases) {}
 
-  async getAll(_req: Request, res: Response): Promise<void> {
-    const users = await this.userUseCases.getAllUsers()
-    ok(res, users)
+  async getAll(req: Request, res: Response): Promise<void> {
+    const listQuery = parseListQuery(req.query)
+    const users = await this.userUseCases.getAllUsers(listQuery)
+    paginated(res, users.data, users.meta)
   }
 
   async getById(req: Request, res: Response): Promise<void> {

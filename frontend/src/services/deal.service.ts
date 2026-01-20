@@ -1,4 +1,5 @@
-import { api, normalizeApiResponse, ApiResponse } from './api'
+import { api, normalizeApiResponse, ApiResponse, type PaginatedResponse } from './api'
+import { buildListQueryString, type ListQueryParams } from '../utils'
 
 export type DealStatus = 'open' | 'won' | 'lost'
 
@@ -29,8 +30,10 @@ export interface UpdateDealDTO {
 }
 
 export const dealService = {
-  getAll: async () =>
-    normalizeApiResponse(await api.get<ApiResponse<Deal[]>>("/deals")),
+  getAll: async (params?: ListQueryParams) =>
+    api.get<PaginatedResponse<Deal[]>>(
+      `/deals${buildListQueryString(params)}`
+    ),
 
   getById: async (id: string) =>
     normalizeApiResponse(await api.get<ApiResponse<Deal>>(`/deals/${id}`)),

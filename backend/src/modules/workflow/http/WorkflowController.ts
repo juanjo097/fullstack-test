@@ -1,17 +1,21 @@
 import type { Response } from 'express'
 import type { AuthenticatedRequest } from '@shared/http'
-import { created, noContent, ok } from '@shared/http'
+import { created, noContent, ok, paginated } from '@shared/http'
 import { forbidden, notFound } from '@shared/errors'
+import { parseListQuery } from '@shared/listing'
 import type { WorkflowUseCases } from '../application'
-import { th } from 'zod/locales'
 
 export class WorkflowController {
   constructor(private readonly workflowUseCases: WorkflowUseCases) {}
 
   async getAll(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { organizationId } = req.user
-    const workflows = await this.workflowUseCases.getAllByOrganization(organizationId)
-    ok(res, workflows)
+    const listQuery = parseListQuery(req.query)
+    const workflows = await this.workflowUseCases.getAllByOrganization(
+      organizationId,
+      listQuery
+    )
+    paginated(res, workflows.data, workflows.meta)
   }
 
   async getById(req: AuthenticatedRequest, res: Response): Promise<void> {

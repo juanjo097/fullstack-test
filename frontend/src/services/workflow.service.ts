@@ -1,4 +1,5 @@
-import { api, ApiResponse, normalizeApiResponse } from './api'
+import { api, ApiResponse, normalizeApiResponse, type PaginatedResponse } from './api'
+import { buildListQueryString, type ListQueryParams } from '../utils'
 
 export interface Stage {
   id: string
@@ -28,8 +29,10 @@ export interface CreateStageDTO {
 }
 
 export const workflowService = {
-  getAll: async () =>
-    normalizeApiResponse(await api.get<ApiResponse<Workflow[]>>("/workflows")),
+  getAll: async (params?: ListQueryParams) =>
+    api.get<PaginatedResponse<Workflow[]>>(
+      `/workflows${buildListQueryString(params)}`
+    ),
 
   getById: async (id: string) =>
     normalizeApiResponse(

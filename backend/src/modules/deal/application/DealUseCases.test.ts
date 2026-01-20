@@ -1,11 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { DealUseCases } from './DealUseCases'
 import { InMemoryDealRepository } from '../infrastructure/InMemoryDealRepository'
+import { DEFAULT_LIMIT, DEFAULT_PAGE, type ListQuery } from '@shared/listing'
 
 describe('DealUseCases', () => {
   let dealUseCases: DealUseCases
   let dealRepository: InMemoryDealRepository
   const orgId = 'org-123'
+  const listQuery: ListQuery = {
+    page: DEFAULT_PAGE,
+    limit: DEFAULT_LIMIT,
+    filters: [],
+    sort: [],
+    logic: 'and',
+  }
 
   beforeEach(() => {
     dealRepository = new InMemoryDealRepository()
@@ -46,8 +54,8 @@ describe('DealUseCases', () => {
 
   describe('getAllByOrganization', () => {
     it('should return empty array when no deals exist', async () => {
-      const deals = await dealUseCases.getAllByOrganization(orgId)
-      expect(deals).toEqual([])
+      const deals = await dealUseCases.getAllByOrganization(orgId, listQuery)
+      expect(deals.data).toEqual([])
     })
 
     it('should return only deals for the specified organization', async () => {
@@ -55,9 +63,9 @@ describe('DealUseCases', () => {
       await dealUseCases.createDeal({ organizationId: orgId, title: 'Deal 2', value: 2000 })
       await dealUseCases.createDeal({ organizationId: 'other-org', title: 'Other Deal', value: 3000 })
 
-      const deals = await dealUseCases.getAllByOrganization(orgId)
-      expect(deals).toHaveLength(2)
-      expect(deals.every((d) => d.organizationId === orgId)).toBe(true)
+      const deals = await dealUseCases.getAllByOrganization(orgId, listQuery)
+      expect(deals.data).toHaveLength(2)
+      expect(deals.data.every((d) => d.organizationId === orgId)).toBe(true)
     })
   })
 

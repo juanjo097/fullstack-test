@@ -1,4 +1,5 @@
 import z from "zod";
+import { listQuerySchema } from "./list.schema";
 
 const userBody = z.object({
   name: z.string().min(2).max(50),
@@ -16,7 +17,7 @@ export const userIdSchema = z.object({
 export const userSchema = z.object({
   body: z.any(),
   params: z.any(),
-  query: z.any(),
+  query: listQuerySchema,
 });
 
 export const createUserSchema = z.object({

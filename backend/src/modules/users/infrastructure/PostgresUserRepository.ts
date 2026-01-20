@@ -1,15 +1,25 @@
 import type { Repository } from 'typeorm'
 import type { User, CreateUserDTO, UserRepository } from '../domain'
+import { applyTypeOrmListQuery, type ListQuery, type PaginatedResult } from '@shared/listing'
 import { UserEntity } from './UserEntity'
 
 export class PostgresUserRepository implements UserRepository {
   constructor(private readonly repository: Repository<UserEntity>) {}
 
-  async findAll(): Promise<User[]> {
-    const entities = await this.repository.find({
-      order: { createdAt: 'DESC' },
-    })
-    return entities.map((entity) => entity.toDomain())
+  async findAll(query: ListQuery): Promise<PaginatedResult<User>> {
+    const qb = this.repository.createQueryBuilder('user')
+
+    const result = await applyTypeOrmListQuery(
+      qb,
+      query,
+      ['id', 'name', 'email', 'createdAt'],
+      'user'
+    )
+
+    return {
+      data: result.data.map((entity) => (entity as UserEntity).toDomain()),
+      meta: result.meta,
+    }
   }
 
   async findById(id: string): Promise<User | null> {

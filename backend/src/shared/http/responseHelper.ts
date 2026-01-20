@@ -11,3 +11,9 @@ export const created = <T>(res: Response, data?: T) => {
 };
 
 export const noContent = (res: Response) => res.status(204).send();
+
+export const paginated = <T>(
+  res: Response,
+  data: T,
+  meta: Record<string, unknown>,
+) => res.status(200).json({ data, meta });

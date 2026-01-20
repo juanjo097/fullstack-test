@@ -1,11 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ContactUseCases } from './ContactUseCases'
 import { InMemoryContactRepository } from '../infrastructure/InMemoryContactRepository'
+import { DEFAULT_LIMIT, DEFAULT_PAGE, type ListQuery } from '@shared/listing'
 
 describe('ContactUseCases', () => {
   let contactUseCases: ContactUseCases
   let contactRepository: InMemoryContactRepository
   const orgId = 'org-123'
+  const listQuery: ListQuery = {
+    page: DEFAULT_PAGE,
+    limit: DEFAULT_LIMIT,
+    filters: [],
+    sort: [],
+    logic: 'and',
+  }
 
   beforeEach(() => {
     contactRepository = new InMemoryContactRepository()
@@ -43,8 +51,8 @@ describe('ContactUseCases', () => {
 
   describe('getAllByOrganization', () => {
     it('should return empty array when no contacts exist', async () => {
-      const contacts = await contactUseCases.getAllByOrganization(orgId)
-      expect(contacts).toEqual([])
+      const contacts = await contactUseCases.getAllByOrganization(orgId, listQuery)
+      expect(contacts.data).toEqual([])
     })
 
     it('should return only contacts for the specified organization', async () => {
@@ -52,9 +60,9 @@ describe('ContactUseCases', () => {
       await contactUseCases.createContact({ organizationId: orgId, name: 'Contact 2' })
       await contactUseCases.createContact({ organizationId: 'other-org', name: 'Other Contact' })
 
-      const contacts = await contactUseCases.getAllByOrganization(orgId)
-      expect(contacts).toHaveLength(2)
-      expect(contacts.every((c) => c.organizationId === orgId)).toBe(true)
+      const contacts = await contactUseCases.getAllByOrganization(orgId, listQuery)
+      expect(contacts.data).toHaveLength(2)
+      expect(contacts.data.every((c) => c.organizationId === orgId)).toBe(true)
     })
   })
 

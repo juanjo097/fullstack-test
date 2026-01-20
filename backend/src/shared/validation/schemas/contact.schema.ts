@@ -1,4 +1,5 @@
 import z from "zod";
+import { listQuerySchema } from "./list.schema";
 
 const contactBody = z.object({
   name: z.string().min(2).max(50),
@@ -17,7 +18,7 @@ export const contactIdSchema = z.object({
 export const contactListSchema = z.object({
   body: z.any(),
   params: z.any(),
-  query: z.any(),
+  query: listQuerySchema,
 });
 
 export const createContactSchema = z.object({

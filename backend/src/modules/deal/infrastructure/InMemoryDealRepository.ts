@@ -1,12 +1,26 @@
 import type { Deal, CreateDealDTO, UpdateDealDTO, DealRepository } from '../domain'
+import { applyListQuery, type ListQuery, type PaginatedResult } from '@shared/listing'
 
 export class InMemoryDealRepository implements DealRepository {
   private deals: Map<string, Deal> = new Map()
 
-  async findAllByOrganization(organizationId: string): Promise<Deal[]> {
-    return Array.from(this.deals.values()).filter(
+  async findAllByOrganization(
+    organizationId: string,
+    query: ListQuery
+  ): Promise<PaginatedResult<Deal>> {
+    const deals = Array.from(this.deals.values()).filter(
       (d) => d.organizationId === organizationId
     )
+    return applyListQuery(deals, query, [
+      'id',
+      'organizationId',
+      'contactId',
+      'stageId',
+      'title',
+      'value',
+      'status',
+      'createdAt',
+    ])
   }
 
   async findById(id: string): Promise<Deal | null> {

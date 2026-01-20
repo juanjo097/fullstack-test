@@ -8,6 +8,7 @@ import type {
   UpdateStageDTO,
   WorkflowRepository,
 } from '../domain'
+import { applyTypeOrmListQuery, type ListQuery, type PaginatedResult } from '@shared/listing'
 import { WorkflowEntity } from './WorkflowEntity'
 import { StageEntity } from './StageEntity'
 
@@ -17,12 +18,25 @@ export class PostgresWorkflowRepository implements WorkflowRepository {
     private readonly stageRepository: Repository<StageEntity>
   ) {}
 
-  async findAllByOrganization(organizationId: string): Promise<Workflow[]> {
-    const entities = await this.workflowRepository.find({
-      where: { organizationId },
-      order: { createdAt: 'DESC' },
-    })
-    return entities.map((e) => e.toDomain())
+  async findAllByOrganization(
+    organizationId: string,
+    query: ListQuery
+  ): Promise<PaginatedResult<Workflow>> {
+    const qb = this.workflowRepository
+      .createQueryBuilder('workflow')
+      .where('workflow.organizationId = :organizationId', { organizationId })
+
+    const result = await applyTypeOrmListQuery(
+      qb,
+      query,
+      ['id', 'organizationId', 'name', 'createdAt'],
+      'workflow'
+    )
+
+    return {
+      data: result.data.map((entity) => (entity as WorkflowEntity).toDomain()),
+      meta: result.meta,
+    }
   }
 
   async findById(id: string): Promise<Workflow | null> {

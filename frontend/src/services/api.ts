@@ -6,6 +6,20 @@ type ApiFieldErrors = Record<string, string[]>;
 
 export type ApiResponse<T> = T | { data: T };
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T;
+  meta: PaginationMeta;
+}
+
 class ApiError extends Error {
   constructor(
     public status: number,

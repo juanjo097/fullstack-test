@@ -1,16 +1,39 @@
 import type { Repository } from 'typeorm'
 import type { Deal, CreateDealDTO, UpdateDealDTO, DealRepository } from '../domain'
+import { applyTypeOrmListQuery, type ListQuery, type PaginatedResult } from '@shared/listing'
 import { DealEntity } from './DealEntity'
 
 export class PostgresDealRepository implements DealRepository {
   constructor(private readonly repository: Repository<DealEntity>) {}
 
-  async findAllByOrganization(organizationId: string): Promise<Deal[]> {
-    const entities = await this.repository.find({
-      where: { organizationId },
-      order: { createdAt: 'DESC' },
-    })
-    return entities.map((e) => e.toDomain())
+  async findAllByOrganization(
+    organizationId: string,
+    query: ListQuery
+  ): Promise<PaginatedResult<Deal>> {
+    const qb = this.repository
+      .createQueryBuilder('deal')
+      .where('deal.organizationId = :organizationId', { organizationId })
+
+    const result = await applyTypeOrmListQuery(
+      qb,
+      query,
+      [
+        'id',
+        'organizationId',
+        'contactId',
+        'stageId',
+        'title',
+        'value',
+        'status',
+        'createdAt',
+      ],
+      'deal'
+    )
+
+    return {
+      data: result.data.map((entity) => (entity as DealEntity).toDomain()),
+      meta: result.meta,
+    }
   }
 
   async findById(id: string): Promise<Deal | null> {

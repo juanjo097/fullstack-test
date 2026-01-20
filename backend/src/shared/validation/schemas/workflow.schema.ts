@@ -1,4 +1,5 @@
 import z from "zod";
+import { listQuerySchema } from "./list.schema";
 
 const stageBody = z.object({
   name: z.string().min(2).max(50),
@@ -22,7 +23,7 @@ export const workflowIdSchema = z.object({
 export const workflowListSchema = z.object({
   body: z.any(),
   params: z.any(),
-  query: z.any(),
+  query: listQuerySchema,
 });
 
 export const stageIdSchema = z.object({

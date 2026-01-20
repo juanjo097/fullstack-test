@@ -1,10 +1,14 @@
 import type { Deal, CreateDealDTO, UpdateDealDTO, DealRepository } from '../domain'
+import type { ListQuery, PaginatedResult } from '@shared/listing'
 
 export class DealUseCases {
   constructor(private readonly dealRepository: DealRepository) {}
 
-  async getAllByOrganization(organizationId: string): Promise<Deal[]> {
-    return this.dealRepository.findAllByOrganization(organizationId)
+  async getAllByOrganization(
+    organizationId: string,
+    query: ListQuery
+  ): Promise<PaginatedResult<Deal>> {
+    return this.dealRepository.findAllByOrganization(organizationId, query)
   }
 
   async getDealById(id: string): Promise<Deal | null> {

@@ -1,4 +1,5 @@
 import z from "zod";
+import { listQuerySchema } from "./list.schema";
 
 const dealBody = z.object({
   title: z.string().min(2).max(100),
@@ -18,7 +19,7 @@ export const dealIdSchema = z.object({
 export const dealListSchema = z.object({
   body: z.any(),
   params: z.any(),
-  query: z.any(),
+  query: listQuerySchema,
 });
 
 export const createDealSchema = z.object({

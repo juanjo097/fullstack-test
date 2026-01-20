@@ -38,7 +38,17 @@ const workflowFixture = {
 describe('WorkflowsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(workflowService.getAll).mockResolvedValue([workflowFixture])
+    vi.mocked(workflowService.getAll).mockResolvedValue({
+      data: [workflowFixture],
+      meta: {
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    })
     vi.mocked(workflowService.getById).mockResolvedValue(workflowFixture)
   })
 

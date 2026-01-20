@@ -4,12 +4,16 @@ import type {
   UpdateContactDTO,
   ContactRepository,
 } from '../domain'
+import type { ListQuery, PaginatedResult } from '@shared/listing'
 
 export class ContactUseCases {
   constructor(private readonly contactRepository: ContactRepository) {}
 
-  async getAllByOrganization(organizationId: string): Promise<Contact[]> {
-    return this.contactRepository.findAllByOrganization(organizationId)
+  async getAllByOrganization(
+    organizationId: string,
+    query: ListQuery
+  ): Promise<PaginatedResult<Contact>> {
+    return this.contactRepository.findAllByOrganization(organizationId, query)
   }
 
   async getContactById(id: string): Promise<Contact | null> {

@@ -4,14 +4,26 @@ import type {
   UpdateContactDTO,
   ContactRepository,
 } from '../domain'
+import { applyListQuery, type ListQuery, type PaginatedResult } from '@shared/listing'
 
 export class InMemoryContactRepository implements ContactRepository {
   private contacts: Map<string, Contact> = new Map()
 
-  async findAllByOrganization(organizationId: string): Promise<Contact[]> {
-    return Array.from(this.contacts.values()).filter(
+  async findAllByOrganization(
+    organizationId: string,
+    query: ListQuery
+  ): Promise<PaginatedResult<Contact>> {
+    const contacts = Array.from(this.contacts.values()).filter(
       (c) => c.organizationId === organizationId
     )
+    return applyListQuery(contacts, query, [
+      'id',
+      'organizationId',
+      'name',
+      'email',
+      'phone',
+      'createdAt',
+    ])
   }
 
   async findById(id: string): Promise<Contact | null> {

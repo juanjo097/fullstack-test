@@ -29,5 +29,8 @@ export const forbidden = (msg = "Forbidden") =>
 export const notFound = (msg = "NotFound") =>
   new HttpError(404, "NotFound", msg);
 
+export const badRequest = (msg = "Bad request") =>
+  new HttpError(400, "BadRequest", msg);
+
 export const invalidCredentials = (msg = "Invalid credentials") =>
   new HttpError(401, "InvalidCredentials", msg);

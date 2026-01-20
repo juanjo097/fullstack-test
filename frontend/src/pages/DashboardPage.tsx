@@ -12,22 +12,25 @@ export function DashboardPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [contacts, deals, workflows] = await Promise.all([
-          contactService.getAll(),
-          dealService.getAll(),
-          workflowService.getAll(),
+        const [contactsResponse, dealsResponse, workflowsResponse] = await Promise.all([
+          contactService.getAll({ limit: 1 }),
+          dealService.getAll({
+            limit: 5,
+            sort: [{ field: 'createdAt', direction: 'desc' }],
+          }),
+          workflowService.getAll({ limit: 1 }),
         ])
 
-        const totalValue = deals.reduce((sum, deal) => sum + deal.value, 0)
+        const totalValue = dealsResponse.data.reduce((sum, deal) => sum + deal.value, 0)
 
         setStats({
-          contacts: contacts.length,
-          deals: deals.length,
-          workflows: workflows.length,
+          contacts: contactsResponse.meta.total,
+          deals: dealsResponse.meta.total,
+          workflows: workflowsResponse.meta.total,
           totalValue,
         })
 
-        setRecentDeals(deals.slice(0, 5))
+        setRecentDeals(dealsResponse.data.slice(0, 5))
       } catch (error) {
         console.error('Failed to load dashboard data:', error)
       } finally {

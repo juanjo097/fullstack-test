@@ -1,7 +1,8 @@
 import type { Response } from 'express'
 import type { AuthenticatedRequest } from '@shared/http'
-import { created, noContent, ok } from '@shared/http'
+import { created, noContent, ok, paginated } from '@shared/http'
 import { forbidden, notFound } from '@shared/errors'
+import { parseListQuery } from '@shared/listing'
 import type { ContactUseCases } from '../application'
 
 export class ContactController {
@@ -9,8 +10,12 @@ export class ContactController {
 
   async getAll(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { organizationId } = req.user
-    const contacts = await this.contactUseCases.getAllByOrganization(organizationId)
-    ok(res, contacts)
+    const listQuery = parseListQuery(req.query)
+    const contacts = await this.contactUseCases.getAllByOrganization(
+      organizationId,
+      listQuery
+    )
+    paginated(res, contacts.data, contacts.meta)
   }
 
   async getById(req: AuthenticatedRequest, res: Response): Promise<void> {

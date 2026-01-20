@@ -1,10 +1,18 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { UserUseCases } from './UserUseCases'
 import { InMemoryUserRepository } from '../infrastructure/InMemoryUserRepository'
+import { DEFAULT_LIMIT, DEFAULT_PAGE, type ListQuery } from '@shared/listing'
 
 describe('UserUseCases', () => {
   let userUseCases: UserUseCases
   let userRepository: InMemoryUserRepository
+  const listQuery: ListQuery = {
+    page: DEFAULT_PAGE,
+    limit: DEFAULT_LIMIT,
+    filters: [],
+    sort: [],
+    logic: 'and',
+  }
 
   beforeEach(() => {
     userRepository = new InMemoryUserRepository()
@@ -28,16 +36,16 @@ describe('UserUseCases', () => {
 
   describe('getAllUsers', () => {
     it('should return empty array when no users exist', async () => {
-      const users = await userUseCases.getAllUsers()
-      expect(users).toEqual([])
+      const users = await userUseCases.getAllUsers(listQuery)
+      expect(users.data).toEqual([])
     })
 
     it('should return all created users', async () => {
       await userUseCases.createUser({ name: 'User 1', email: 'user1@test.com' })
       await userUseCases.createUser({ name: 'User 2', email: 'user2@test.com' })
 
-      const users = await userUseCases.getAllUsers()
-      expect(users).toHaveLength(2)
+      const users = await userUseCases.getAllUsers(listQuery)
+      expect(users.data).toHaveLength(2)
     })
   })
 

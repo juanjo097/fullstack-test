@@ -73,9 +73,39 @@ function mockLoadData({
   workflows = [workflowFixture],
   contacts = [contactFixture],
 } = {}) {
-  vi.mocked(dealService.getAll).mockResolvedValue(deals)
-  vi.mocked(workflowService.getAll).mockResolvedValue(workflows)
-  vi.mocked(contactService.getAll).mockResolvedValue(contacts)
+  vi.mocked(dealService.getAll).mockResolvedValue({
+    data: deals,
+    meta: {
+      page: 1,
+      limit: 10,
+      total: deals.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    },
+  })
+  vi.mocked(workflowService.getAll).mockResolvedValue({
+    data: workflows,
+    meta: {
+      page: 1,
+      limit: 10,
+      total: workflows.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    },
+  })
+  vi.mocked(contactService.getAll).mockResolvedValue({
+    data: contacts,
+    meta: {
+      page: 1,
+      limit: 10,
+      total: contacts.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    },
+  })
 }
 
 describe('DealsPage', () => {
